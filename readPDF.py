@@ -1,24 +1,26 @@
 import requests
-import PyPDF2
-from io import BytesIO
+import fitz  # PyMuPDF
 
-def read_pdf_from_url(pdf_url):
-    # Send a GET request to the URL to fetch the PDF content
-    response = requests.get(pdf_url)
-    
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Read the content of the PDF
-        pdf_content = BytesIO(response.content)
-        
-        # Create a PDF file reader object
-        pdf_reader = PyPDF2.PdfFileReader(pdf_content)
-        
-        # Read each page of the PDF
-        for page_num in range(pdf_reader.numPages):
-            page = pdf_reader.getPage(page_num)
-            print(page.extractText())  # Extract text from the page
+# URL of the PDF file
+pdf_url = "https://aclanthology.org/N18-3011.pdf"
 
-# Example usage
-pdf_url = "https://www.aclweb.org/anthology/N18-3011.pdf"
-read_pdf_from_url(pdf_url)
+# Download the PDF content
+response = requests.get(pdf_url)
+pdf_bytes = response.content
+
+# Open the PDF using PyMuPDF
+pdf_document = fitz.open("pdf", pdf_bytes)
+
+# Initialize an empty string to store the text content
+pdf_text = ""
+
+# Iterate through each page and extract text
+for page_number in range(pdf_document.page_count):
+    page = pdf_document[page_number]
+    pdf_text += page.get_text()
+
+# Close the PDF document
+pdf_document.close()
+
+# Print or use the extracted text
+print(pdf_text)
