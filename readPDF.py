@@ -15,12 +15,22 @@ pdf_document = fitz.open("pdf", pdf_bytes)
 pdf_text = ""
 
 # Iterate through each page and extract text
-for page_number in range(pdf_document.page_count):
+for page_number in range(2):
     page = pdf_document[page_number]
     pdf_text += page.get_text()
 
 # Close the PDF document
 pdf_document.close()
 
+# Check if the text contains 'Abstract' or 'Introduction'
+abstract_index = pdf_text.find('Abstract')
+introduction_index = pdf_text.find('Introduction')
+
+# Determine where to start the text
+start_index = min(filter(lambda x: x != -1, [abstract_index, introduction_index]))
+
+# Cut the text from the starting index
+cut_pdf_text = pdf_text[start_index:]
+
 # Print or use the extracted text
-print(page)
+print(cut_pdf_text)
