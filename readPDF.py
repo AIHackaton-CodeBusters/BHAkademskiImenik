@@ -1,5 +1,5 @@
 import requests
-import fitz  # PyMuPDF
+import fitz  
 
 # URL of the PDF file
 pdf_url = "https://aclanthology.org/N18-3011.pdf"
@@ -23,4 +23,4 @@ for page_number in range(pdf_document.page_count):
 pdf_document.close()
 
 # Print or use the extracted text
-print(pdf_text)
+print(page)
