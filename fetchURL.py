@@ -27,3 +27,4 @@ pdf_links = read_pdf_links_from_csv(csv_file)
 # Print the PDF links
 for pdf_link in pdf_links:
     print(pdf_link)
+
