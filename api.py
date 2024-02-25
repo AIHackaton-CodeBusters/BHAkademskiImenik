@@ -37,17 +37,13 @@ def getSuggested():
     
     if response.status_code != 200:
         return jsonify({'error': f"Request failed with status code {response.status_code}: {response.text}"}), response.status_code
-    
     '''
 
     fieldsOfStudy = request.json['fieldsOfStudy']
-
     csvPublications = getPublications()
 
-    publications = [csvPublication for csvPublication in csvPublications if any(fieldOfStudy == csvPublication.category for fieldOfStudy in fieldsOfStudy)]
-
+    publications = [publication for publication in csvPublications if any(category in publication.category for category in fieldsOfStudy)]
     return jsonify([publication.to_dict() for publication in publications])
-
 
 if __name__ == '__main__':
     app.run(debug=True)
