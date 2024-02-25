@@ -124,7 +124,7 @@ def getSuggested():
         match = re.findall(r'\d*%', str(text))
         match = [int(m.replace('%', '')) for m in match]
         if match.count!=0:
-            percentage = match
+            percentage = match[0]
             publicationObject = Publication(
                 publicationObject.get('paperId'),
                 publicationObject.get('url'),
@@ -140,7 +140,7 @@ def getSuggested():
 
         sorted_publications = sorted(listOfPercentagesAndPublications, key=lambda x: x.percentage_of_similarity, reverse=True)
 
-    return jsonify([item.publication.to_dict() for item in sorted_publications[:3]])
+    return jsonify([item.percentage_of_similarity for item in sorted_publications[:3]])
 
 if __name__ == '__main__':
     app.run(debug=True, port=3000)
