@@ -87,10 +87,23 @@ def getSuggested():
     '''
 
     fieldsOfStudy = request.json['fieldsOfStudy']
+    current_publication_id = request.json['publication_id']
     csvPublications = getPublications()
 
     publications = [publication for publication in csvPublications if any(category in publication.category for category in fieldsOfStudy)]
-    publications = publications[:3]
+    
+    publication = publication[:5]
+
+    publicationId = current_publication_id
+    url = f'https://api.semanticscholar.org/graph/v1/paper/{publicationId}?fields=abstract'
+    current_abstract = request.get(url)['abstract']
+    
+
+    for publication in publications:
+        publicationId = publication.semantic_paper_id
+        abstract = requests.get(url)['abstract']
+        
+
     return jsonify([publication.to_dict() for publication in publications])
 
 if __name__ == '__main__':
