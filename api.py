@@ -3,7 +3,8 @@ import requests
 import fitz  
 import json
 import requests
-from readPublicationsCvs import getPublications
+import re
+from readPublicationsCvs import getPublications, Publication
 from openai import OpenAI
 from flask import Flask, jsonify,request
 
@@ -14,6 +15,11 @@ api_key = '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'
 client = OpenAI(api_key=api_key)
 
 csv_file = "data/publications.csv"
+
+class PercentageAndPublication:
+    def __init__(self, publication, percentage_of_similarity):
+        self.publication = publication
+        self.percentage_of_similarity = percentage_of_similarity
 
 # Function to get paper summary
 def getPaperSummary(paper_id):
@@ -87,11 +93,54 @@ def getSuggested():
     '''
 
     fieldsOfStudy = request.json['fieldsOfStudy']
+    current_publication_id = request.json['publication_id']
     csvPublications = getPublications()
 
-    publications = [publication for publication in csvPublications if any(category in publication.category for category in fieldsOfStudy)]
-    publications = publications[:3]
-    return jsonify([publication.to_dict() for publication in publications])
+    publications = [publication for publication in csvPublications if any(category in publication.category for category in fieldsOfStudy) and publication.semantic_paper_id != current_publication_id]
+    
+    publications = publications[:5]
+
+    publicationId = current_publication_id
+    url = f'https://api.semanticscholar.org/graph/v1/paper/{publicationId}?fields=abstract'
+    current_abstract = requests.get(url).json()['abstract']
+    
+    listOfPercentagesAndPublications = []
+
+    for publication in publications:
+        publicationId = publication.semantic_paper_id
+        url = f'https://api.semanticscholar.org/graph/v1/paper/{publicationId}?fields=abstract,title,openAccessPdf,authors,fieldsOfStudy,url'
+        publicationObject = requests.get(url).json()
+        abstract = requests.get(url).json()['abstract']
+        prompt = f" TASK: Give me a percent of similarity of the following two texts. Focus on themes and fields of studies. Write a sentence: \"Percentage is {{number}}\" and add your estimated percetange of similarity. \n\n Text1:\n\n {abstract}\n\n Text2:\n\n {current_abstract}."
+        payload = {
+            "model": "mistralai/Mistral-7B-Instruct-v0.2",
+            "prompt": prompt,
+            "stop": "..",
+            "max_tokens": 1500,
+            "temperature": 0
+        }       
+        response = requests.post("https://late-wasps-joke.loca.lt/v1/completions", json = payload)   
+        text = response.json()["choices"][0]["text"]
+        match = re.findall(r'\d*%', str(text))
+        match = [int(m.replace('%', '')) for m in match]
+        if match.count!=0:
+            percentage = match
+            publicationObject = Publication(
+                publicationObject.get('paperId'),
+                publicationObject.get('url'),
+                publicationObject.get('title'),
+                publicationObject.get('openAccessPdf'),
+                publicationObject.get('authors'),
+                publicationObject.get('fieldsOfStudy'))
+
+            listOfPercentagesAndPublications.append(PercentageAndPublication(publicationObject,percentage))
+        
+        if response.status_code !=200:
+            return(f"Error: {response.status_code}, {response.text}")
+
+        sorted_publications = sorted(listOfPercentagesAndPublications, key=lambda x: x.percentage_of_similarity, reverse=True)
+
+    return jsonify([item.publication.to_dict() for item in sorted_publications[:3]])
 
 if __name__ == '__main__':
     app.run(debug=True, port=3000)
