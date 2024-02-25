@@ -121,6 +121,9 @@ def read_pdf_link_from_csv(csv_file, paper_id):
 
 async def translateDocument(paper_summary, target_language):
     # Define payload for translation request
+    print("DOBIO PARAMETAR")
+    print(paper_summary)
+
     translation_payload = {
         "model": "mistralai/Mistral-7B-Instruct-v0.2",
         "prompt": f"TASK: Translate the following text in {target_language}. Use all the sentences.\n\n Text:{paper_summary}&&",
@@ -129,23 +132,23 @@ async def translateDocument(paper_summary, target_language):
         "temperature": 0
     }
     
-    # Send translation request
-    response = requests.post(completions_endpoint, json=translation_payload)
+    # Send translation request asynchronously
+    async with httpx.AsyncClient() as client:
+        response = await client.post(completions_endpoint, json=translation_payload)
     
-    # Check response status
-    if response.status_code == 200:
-        # Extract translated text
-        translated_text = response.json()['choices'][0]['text']
-        return translated_text
-    else:
-        return None
+        # Check response status
+        if response.status_code == 200:
+            # Extract translated text
+            translated_text = response.json()['choices'][0]['text']
+            return translated_text
+        else:
+            return None
 
 @app.route('/simplifyOtherLanguages/<paper_id>', methods=['GET'])
 def simplifyOtherLanguages(paper_id):
     target_language = request.args.get('target_language')
     if target_language:
         summary = getPaperSummary(paper_id)
-        print(summary)
         if summary:
             translated_summary = translateDocument(summary, target_language)
             if translated_summary:
@@ -158,16 +161,11 @@ def simplifyOtherLanguages(paper_id):
         return jsonify({'error': 'Target language not provided in the request'}), 400
 
 
-@app.route('/simplifyEN/<paper_id>', methods=['GET'])
+@app.route('/simplify/<paper_id>', methods=['GET'])
 async def simplifyEN(paper_id):
-    summary = await getPaperSummary(paper_id)
+    summary = await getPaperSummary(paper_id)  
     if summary:
-        #translated_summary = await translateDocument(summary, 'English') 
-        #if translated_summary:
-            #return jsonify({'summary': translated_summary})
-        return jsonify({'summary': summary})
-        #else:
-            #return jsonify({'error': 'Failed to translate the document'}), 500
+        return jsonify({'summary': summary})      
     else:
         return jsonify({'error': 'Paper not found'}), 404
     
