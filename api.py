@@ -3,8 +3,9 @@ import requests
 import fitz  
 import json
 import requests
+from readPublicationsCvs import getPublications
 from openai import OpenAI
-from flask import Flask, jsonify
+from flask import Flask, jsonify,request
 
 app = Flask(__name__)
 
@@ -73,6 +74,24 @@ def read_pdf_link_from_csv(csv_file, paper_id):
 def summarize(paper_id):
     summary = getPaperSummary(paper_id)
     return jsonify({'summary': summary})
+
+@app.route('/suggested', methods = ['POST'])
+def getSuggested():
+    '''
+    url = f'https://api.semanticscholar.org/recommendations/v1/papers/forpaper/{publicationId}?fields=authors,title'
+
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        return jsonify({'error': f"Request failed with status code {response.status_code}: {response.text}"}), response.status_code
+    '''
+
+    fieldsOfStudy = request.json['fieldsOfStudy']
+    csvPublications = getPublications()
+
+    publications = [publication for publication in csvPublications if any(category in publication.category for category in fieldsOfStudy)]
+    publications = publications[:3]
+    return jsonify([publication.to_dict() for publication in publications])
 
 if __name__ == '__main__':
     app.run(debug=True, port=3000)
