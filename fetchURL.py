@@ -21,7 +21,6 @@ def read_pdf_links_from_csv(csv_file):
 # Path to the CSV file
 csv_file = "data/publications.csv"
 
-
 # Read PDF links from the CSV file
 pdf_links = read_pdf_links_from_csv(csv_file)
 
