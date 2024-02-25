@@ -38,7 +38,7 @@ def getPaperSummary(paper_id):
         completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are requested to simplify a technical document about multi-core quantum computing architectures."},
+                    {"role": "system", "content": "You are requested to simplify a document."},
                     {"role": "user", "content": "Simplify the document and include headings to make it understandable for people with limited knowledge on the subject."},
                     {"role": "user", "content": "The document should be no longer than 2 pages."},
                     {"role": "user", "content": "Here is the text: " + pdf_text}  # Providing the extracted text from the PDF
