@@ -7,9 +7,10 @@ import re
 from readPublicationsCvs import getPublications, Publication
 from openai import OpenAI
 from flask import Flask, jsonify,request
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 # Replace 'YOUR_API_KEY' with your actual OpenAI API key
 api_key = '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'
 client = OpenAI(api_key=api_key)
@@ -143,4 +144,4 @@ def getSuggested():
     return jsonify([item.publication.to_dict() for item in sorted_publications[:3]])
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+    app.run(debug=True, port=3600)
